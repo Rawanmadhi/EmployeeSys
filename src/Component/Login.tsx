@@ -1,48 +1,85 @@
 // import file
-import React, { useRef,useState  } from 'react'
+import React, { useRef,useState ,useEffect } from 'react'
 import './StyleComp.css'
-import {useloginHooks} from '../hooks/useLoginHooks';
+import {useLoginHooks} from '../hooks/useLoginHooks';
+import { useNavigate } from "react-router-dom"
+import Home from './Home';
+import axios from '../API/axios';
+
+export interface ILoginInfo {
+    username: string;
+    password: string;
+}
+
+const initLogin: ILoginInfo = {
+    username: '',
+    password:''
+}
 
 
 //exported function 
 const Login:React.FC = () => {
-
+const navigate =useNavigate();
 //decalre State
-const [username,setUsername] = useState<string>('');
-const [password,setPassword] = useState<string>(''); 
-
+const [loginInfo, setLoginInfo] = useState<ILoginInfo>(initLogin);
+const {getLoginInfo} = useLoginHooks();
 
     // custom functions
-const signInButton = (e:React.FormEvent)=>{
- //   const accessToken = useloginHooks(username,password);
-    //console.log(accessToken)
+   const signInButton = (e:React.FormEvent)=>{
+    
+    getLoginInfo(loginInfo, 
+        {
+            onSuccess(data) {
+             //   console.log("Bearer "+data['accessToken']);
+                axios.defaults.headers.common['Authorization']= "Bearer "+data['accessToken']; // each request will have this in the header 
+                setLoginInfo({username:"",password:""})
+                navigate('/Home');
+            },
+        })
+      
 }
 
 
-
-    //decalre ref
-    const userRef = useRef<HTMLInputElement>(null);
-    const userPass=useRef<HTMLInputElement>(null);
-    setUsername('');
-    setPassword('');
 
 
     //Return 
   return (
     < div>
-            <div>
-            <span className='text'> Sign in Page</span>
-            </div>
-        <div>
-            <form  className="login_form" onSubmit={(e)=>{
+
+        <section className='login__box'>
+            <form  className="login__form" onSubmit={(e)=>{
                 e.preventDefault(); // to prevent refresh
                 signInButton(e);
             }}>
-                <input type="text" className="input" ref={userRef} placeholder='Enter username'/>
-                <input type="password" className="input" ref={userPass} placeholder='Enter Password'/>
-                <button className='signin' type='submit'> Sign In</button>
+                <div>
+                <span className='text'> Sign in Page</span>
+                </div>
+                <label htmlFor='username'>Username: </label>
+                <input type="text"
+                  id='username'
+                   className="login__inputs"
+                //    ref={userRef}
+                     placeholder='Enter username'
+                      value={loginInfo.username}
+                       required
+                        onChange={(e)=>setLoginInfo({...loginInfo,username:e.target.value})}/>
+
+               <label htmlFor='password'>password: </label>
+
+                <input type="password"
+                 className="login__inputs"
+                 id="password"
+                //ref={userPass}
+                   placeholder='Enter Password'
+                    onChange={(e)=>setLoginInfo({...loginInfo,password:e.target.value})}
+                    required
+                    autoComplete='off'
+                    value={loginInfo.password}/>
+
+
+                <button className='login__button' type='submit'> Sign In</button>
             </form>
-        </div>
+        </section>
     </div>
 
   )
